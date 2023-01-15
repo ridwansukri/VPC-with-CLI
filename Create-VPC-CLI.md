@@ -1,7 +1,32 @@
+# Objectives
+- Create a virtual private cloud (VPC)
+- Create subnets
+- Configure a security group
+- Launch an Amazon Elastic Compute Cloud (Amazon EC2) instance into a VPC
+- Deploy web server using userdata
+
+# Scenario
+In this project, we use Amazon Virtual Private Cloud (VPC) to create own VPC and add additional components to produce a customized network for a Fortune 100 customer. We also create security groups for our EC2 instance. Then, we configure and customize an EC2 instance to run a web server and launch it into the VPC that looks like the following customer diagram:
+
+![cust-diagram](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/architecture.jpeg "Customer Diagram")
+
+The customer is requesting the build of this architecture to launch their web server successfully.
+
+# AWS Service Restriction
+We wor on this project using sandbox to avoid unwanted bills so maybe some features are limited. But we try to make the steps as realistic as possible.
+
+# Configure AWS CLI
+To interact with AWS services using the CLI, we need to install CLI on the local machine (we use linux on this project) and create credentials in the AWS menu. Documentation about CLI you can find [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html).
+Since we are using a sandbox, the credentials are already available and using nano to paste credentials
+
 ```
 nano ~/.aws/credentials
 ```
 
+![credentials](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/credentials.png "Credentials")
+
+# Create VPC
+Create a VPC with CIDR 10.0.0.0/16
 ```
 aws ec2 create-vpc --cidr-block 10.0.0.0/16 
 ```
@@ -29,11 +54,20 @@ Output:
     }
 }
 ```
-
+## Tagging VPC
 ```
 aws ec2 create-tags --resources vpc-02aca48c23e8220e6 --tags Key=Name,Value=VPC-CLI
 ```
+# Create Subnet
+The customer requests to create 2 public subnets and 2 private subnets with different AZs. Since this sandbox automatically launches on us-west-2, Public Subnet 1 and Private Subnet 1 will launch on AZ us-west-2a and Public Subnet 2 and Private Subnet 2 will launch on AZ us-west-2b
+
+## Create Public Subnet 1
+Public Subnet 1 with CIDR 10.0.0.0/24 and AZ us-west-2a in the VPC that we created earlier
+```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.0.0/24 --availability-zone us-west-2a
+```
+Output:
+```
 {
     "Subnet": {
         "AvailabilityZone": "us-west-2a",
@@ -58,12 +92,20 @@ aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.0.0/24 --
         }
     }
 }
+```
 
+## Tagging Public Subnet 1
+```
 aws ec2 create-tags --resources subnet-02f18c2ce33868f88 --tags Key=Name,Value=Public-Subnet-1
+```
 
-
-#Private subnet 1
+## Create Private Subnet 1
+Private Subnet 1 with CIDR 10.0.1.0/24 and AZ us-west-2a in the VPC that we created earlier
+```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.1.0/24 --availability-zone us-west-2a
+```
+Output:
+```
 {
     "Subnet": {
         "AvailabilityZone": "us-west-2a",
@@ -88,10 +130,20 @@ aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.1.0/24 --
         }
     }
 }
-aws ec2 create-tags --resources subnet-0f5296308bbf7766b --tags Key=Name,Value=Private-Subnet-1
+```
 
-#public subnet 2
+## Tagging Private Subnet 1
+```
+aws ec2 create-tags --resources subnet-0f5296308bbf7766b --tags Key=Name,Value=Private-Subnet-1
+```
+
+# Create Public subnet 2
+Private Subnet 2 with CIDR 10.0.2.0/24 and AZ us-west-2b in the VPC that we created earlier
+```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.2.0/24 --availability-zone us-west-2b
+```
+Output:
+```
 {
     "Subnet": {
         "AvailabilityZone": "us-west-2b",
@@ -116,6 +168,9 @@ aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.2.0/24 --
         }
     }
 }
+```
+
+## Tagging Public Subnet 2
 aws ec2 create-tags --resources subnet-0ba786e223af6bd76 --tags Key=Name,Value=Public-Subnet-2
 
 #Private subnet 2 

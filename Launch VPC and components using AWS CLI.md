@@ -3,7 +3,13 @@
 - Create subnets
 - Configure a security group
 - Launch an Amazon Elastic Compute Cloud (Amazon EC2) instance into a VPC
-- Deploy web server using userdata
+- Deploy web server using user data
+
+# Featured Skills
+- Understanding AWS Resources
+- Managing AWS resource using AWS CLI
+- Basic TCP IP Networking
+- Basic Linux Commands
 
 # Scenario
 In this project, I use Amazon Virtual Private Cloud (VPC) to create my VPC and add additional components to produce a customized network for a Fortune 100 customer. I also create security groups for my EC2 instance. Then, I configure and customize an EC2 instance to run a web server and launch it into the VPC that looks like the following customer diagram:
@@ -16,7 +22,7 @@ The customer is requesting the build of this architecture to launch their web se
 I work on this project using sandbox to avoid unwanted bills so maybe some features are limited. But I try to make the steps as realistic as possible.
 
 # Configure AWS CLI
-To interact with AWS services using the CLI, you need to install and configure CLI on the local machine (I use linux on this project) and create Access Key in the Security Credentials menu. Documentation about CLI you can find [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html).
+To interact with AWS services using the CLI, you need to install and configure CLI on the local machine (I use linux on this project) and create Access Key in the Security Credentials menu[^1].
 Since I'm using a sandbox, the credentials are already available and using nano to paste credentials
 
 ![credentials](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/credentials.png "Credentials")
@@ -237,7 +243,7 @@ aws ec2 attach-internet-gateway --internet-gateway-id igw-0276549060483ce14 --vp
 ```
 
 # Create Static IP Address via Elastic IP Address
-To Attach NAT Gateway from Public Subnet 1 into Private Subnet 1, I need an IP address that allocated from Elastic IP Address.
+To Attach NAT Gateway from Public Subnet 1 into Private Subnet 1, I need an IP address that allocated from Elastic IP Address [^2].
 ```
 aws ec2 allocate-address --domain vpc
 ```
@@ -278,7 +284,9 @@ Output:
 }
 ```
 ## Tagging NAT Gateway
+```
 aws ec2 create-tags --resources nat-01bf708211ec634ed --tags Key=Name,Value=NAT-Subnet-1
+```
 
 # Create Route Table 1 for Public Subnet:
 ```
@@ -486,11 +494,12 @@ Output:
     "KeyPairId": "key-089162164d08c227c"
 }
 ```
-
-# Create EC2
-ami-0b5eea76982371e91 Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type (64-bit (x86)) 
-
+## Create userdata file
+To create EC2 with user data and a specific script, the script needs to be included in a txt file and base64 encoded[^3].
+```
 nano userdata.txt
+```
+Paste this script into userdata.txt
 
 ```
 #!/bin/bash
@@ -510,15 +519,15 @@ unzip lab-app.zip -d /var/www/html/
 chkconfig httpd on
 
 service httpd start
-````
 ```
-realpath -s userdata.txt
+Encode userdata.txt with base-64
+```
+base64 userdata.txt > userdata64.txt
 ```
 
-/home/ridho/userdata.txt
-
-
-
+# Launch a EC2 Instance
+Launch a EC2 instance with ami-0ceecbb0f30a902a6 on Public Subnet 2, security group, user data file that I created before. 
+```
 aws ec2 run-instances \
     --image-id ami-0ceecbb0f30a902a6\
     --instance-type t2.micro \
@@ -526,9 +535,10 @@ aws ec2 run-instances \
     --security-group-ids sg-064aa87c8f2e78763 \
     --associate-public-ip-address \
     --key-name keypair
-    --user-data /home/ridho/userdata.txt
-
-
+    --user-data file://userdata64.txt
+```
+Output:
+```
 {
     "Groups": [],
     "Instances": [
@@ -569,26 +579,13 @@ aws ec2 run-instances \
                     "Attachment": {
                         "AttachTime": "2023-01-15T11:32:12+00:00",
 
-base64 userdata.txt > userdata64.txt
-aws ec2 modify-instance-attribute --instance-id i-06bb4e94b36958e1a --attribute userData --value file://userdata64.txt
+```
+# Launch Web Server from Public IP
+Wait until the Web Server 1 shows 2/2 checks passed in the Status check column in EC2 menu. If finished, copy the Public IPv4 address and paste the Public IPv4 address in new tab or new windows in browser, and press Enter.
 
+![web-server](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/web-server.png "Web Server is launched")
 
-aws ec2 start-instances --instance-ids i-06bb4e94b36958e1a
-{
-    "StartingInstances": [
-        {
-            "CurrentState": {
-                "Code": 0,
-                "Name": "pending"
-            },
-            "InstanceId": "i-06bb4e94b36958e1a",
-            "PreviousState": {
-                "Code": 80,
-                "Name": "stopped"
-            }
-        }
-    ]
-}
-
-Resources:
-[Setup Nat Gateway](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/create-nat-gateway.html)
+Footnotes
+[^1]: [CLI Documentation](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+[^2]: [Setup NAT Gateway](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/create-nat-gateway.html)
+[^3]: [Working with instance user data](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instancedata-add-user-data.html)

@@ -7,7 +7,7 @@
 
 # Featured Skills
 - Understanding AWS Resources
-- Managing AWS resource using AWS CLI
+- Managing AWS resources using AWS CLI
 - Basic TCP IP Networking
 - Basic Linux Commands
 
@@ -19,11 +19,11 @@ In this project, I use Amazon Virtual Private Cloud (VPC) to create my VPC and a
 The customer is requesting the build of this architecture to launch their web server successfully.
 
 # AWS Service Restriction
-I work on this project using sandbox to avoid unwanted bills so maybe some features are limited. But I try to make the steps as realistic as possible.
+I work on this project using AWS Sandbox to avoid unwanted bills so some features may be limited. But I make the steps as realistic as possible.
 
 # Configure AWS CLI
-To interact with AWS services using the CLI, you need to install and configure CLI on the local machine (I use linux on this project) and create Access Key in the Security Credentials menu[^1].
-Since I'm using a sandbox, the credentials are already available and using nano to paste credentials
+To interact with AWS services using the CLI, you need to install and configure CLI on the local machine (I use Linux on this project) and create Access Key in the Security Credentials [^1].
+Since I'm using a sandbox, the credentials are already available, and using nano to paste the credentials.
 
 ![credentials](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/credentials.png "Credentials")
 
@@ -65,10 +65,10 @@ Output:
 aws ec2 create-tags --resources vpc-02aca48c23e8220e6 --tags Key=Name,Value=VPC-CLI
 ```
 # Create Subnet
-The customer requests to create 2 public subnets and 2 private subnets with different AZs. Since this sandbox automatically launches on us-west-2, Public Subnet 1 and Private Subnet 1 will launch on AZ us-west-2a and Public Subnet 2 and Private Subnet 2 will launch on AZ us-west-2b
+The customer requests creating two public subnets and two private ones with different AZs. Since this sandbox automatically launches on us-west-2, Public Subnet 1 and Private Subnet 1 will launch on AZ us-west-2a, and Public Subnet 2 and Private Subnet 2 will launch on AZ us-west-2b.
 
 ## Create Public Subnet 1
-Public Subnet 1 with CIDR 10.0.0.0/24 and AZ us-west-2a in the VPC that we created earlier
+Public Subnet 1 with CIDR 10.0.0.0/24 and AZ us-west-2a in the VPC that I created.
 ```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.0.0/24 --availability-zone us-west-2a
 ```
@@ -106,7 +106,7 @@ aws ec2 create-tags --resources subnet-02f18c2ce33868f88 --tags Key=Name,Value=P
 ```
 
 ## Create Private Subnet 1
-Private Subnet 1 with CIDR 10.0.1.0/24 and AZ us-west-2a in the VPC that we created earlier
+Private Subnet 1 with CIDR 10.0.1.0/24 and AZ us-west-2a in the VPC that I created.
 ```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.1.0/24 --availability-zone us-west-2a
 ```
@@ -144,7 +144,7 @@ aws ec2 create-tags --resources subnet-0f5296308bbf7766b --tags Key=Name,Value=P
 ```
 
 ## Create Public subnet 2
-Private Subnet 2 with CIDR 10.0.2.0/24 and AZ us-west-2b in the VPC that we created earlier
+Private Subnet 2 with CIDR 10.0.2.0/24 and AZ us-west-2b in the VPC that I created.
 ```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.2.0/24 --availability-zone us-west-2b
 ```
@@ -182,7 +182,7 @@ aws ec2 create-tags --resources subnet-0ba786e223af6bd76 --tags Key=Name,Value=P
 ```
 
 ## Create Private subnet 2 
-Private Subnet 2 with CIDR 10.0.3.0/24 and AZ us-west-2b in the VPC that I created earlier
+Private Subnet 2 with CIDR 10.0.3.0/24 and AZ us-west-2b in the VPC that I created.
 ```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.3.0/24 --availability-zone us-west-2b
 ```
@@ -258,7 +258,7 @@ Output:
 }
 ```
 
-# Create NAT-Gateway in Public Subnet 1
+# Create NAT Gateway in Public Subnet 1
 Create a NAT gateway and put it in the Public Subnet 1, then map the static IP address from Elastic IP Address
 ```
 aws ec2 create-nat-gateway --subnet-id subnet-02f18c2ce33868f88 --allocation-id eipalloc-0d546b7e68012adcc
@@ -319,7 +319,7 @@ Output:
 aws ec2 create-tags --resources rtb-070e379080e967159 --tags Key=Name,Value=Public-Route-Table
 ```
 
-# Create Route Table 2 for Private Subnet:
+# Create Route Table 2 for Private Subnet
 ```
 aws ec2 create-route-table --vpc-id vpc-02aca48c23e8220e6
 ```
@@ -350,7 +350,7 @@ Output:
 aws ec2 create-tags --resources rtb-0b8a0dd6b5000023d --tags Key=Name,Value=Private-Route-Table
 ```
 
-# Create a Route to The Internet in Public Route Table:
+# Create a Route to The Internet in Public Route Table
 ```
 aws ec2 create-route --route-table-id rtb-070e379080e967159 --destination-cidr-block 0.0.0.0/0 --gateway-id igw-0276549060483ce14
 ```
@@ -361,7 +361,7 @@ Output:
 }
 ```
 
-# Create a route to the internet in Private Route Table for Private Subnet 1 via NAT Gateway:
+# Create a route to the internet in Private Route Table for Private Subnet 1 via NAT Gateway
 ```
 aws ec2 create-route --route-table-id rtb-0b8a0dd6b5000023d --destination-cidr-block 0.0.0.0/0 --gateway-id nat-01bf708211ec634ed
 ```
@@ -372,7 +372,7 @@ Output:
 }
 ```
 
-# Associate Public Route Table to Public Subnet 1 :
+# Associate Public Route Table to Public Subnet 1
 ```
 aws ec2 associate-route-table --route-table-id rtb-070e379080e967159 --subnet-id subnet-02f18c2ce33868f88
 ```
@@ -386,7 +386,7 @@ Output:
 }
 ```
 
-# Associate Public Route Table to Public Subnet 2 :
+# Associate Public Route Table to Public Subnet 2
 ```
 aws ec2 associate-route-table --route-table-id rtb-070e379080e967159 --subnet-id subnet-0ba786e223af6bd76
 ```
@@ -400,7 +400,7 @@ Output:
 }
 ```
 
-# Associate Private Route Table to Private Subnet 1 :
+# Associate Private Route Table to Private Subnet 1
 ```
 aws ec2 associate-route-table --route-table-id rtb-0b8a0dd6b5000023d --subnet-id subnet-0f5296308bbf7766b
 ```
@@ -414,9 +414,9 @@ Output:
 }
 ```
 
-# Create EC2 and it's own components
+# Create EC2 and its components
 ## Create Security Group
-After VPC and additional components is complete, I create Security Group for EC2
+After VPC and additional components are complete, I create a Security Group for EC2.
 ```
 aws ec2 create-security-group --group-name Web-Security-Group --description "Enable HTTP Access" --vpc-id vpc-02aca48c23e8220e6
 ```
@@ -495,7 +495,7 @@ Output:
 }
 ```
 ## Create userdata file
-To create EC2 with user data and a specific script, the script needs to be included in a txt file and base64 encoded[^3].
+To create an EC2 with user data and a specific script, the script needs to be included in a txt file and base64 encoded[^3].
 ```
 nano userdata.txt
 ```
@@ -525,8 +525,8 @@ Encode userdata.txt with base-64
 base64 userdata.txt > userdata64.txt
 ```
 
-# Launch a EC2 Instance
-Launch a EC2 instance with ami-0ceecbb0f30a902a6 on Public Subnet 2, security group, user data file that I created before. 
+# Launch an EC2 Instance
+Launch an EC2 instance with ami-0ceecbb0f30a902a6 on Public Subnet 2, security group, and user data file I created.
 ```
 aws ec2 run-instances \
     --image-id ami-0ceecbb0f30a902a6\
@@ -581,7 +581,7 @@ Output:
 
 ```
 # Launch Web Server from Public IP
-Wait until the Web Server 1 shows 2/2 checks passed in the Status check column in EC2 menu. If finished, copy the Public IPv4 address and paste the Public IPv4 address in new tab or new windows in browser, and press Enter.
+Wait until Web Server 1 shows 2/2 checks passed in the Status check column in the EC2 menu. If finished, copy the Public IPv4 address, paste the Public IPv4 address in a new tab or window in the browser, and press Enter.
 
 ![web-server](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/web-server.png "Web Server is launched")
 

@@ -6,24 +6,24 @@
 - Deploy web server using userdata
 
 # Scenario
-In this project, we use Amazon Virtual Private Cloud (VPC) to create own VPC and add additional components to produce a customized network for a Fortune 100 customer. We also create security groups for our EC2 instance. Then, we configure and customize an EC2 instance to run a web server and launch it into the VPC that looks like the following customer diagram:
+In this project, I use Amazon Virtual Private Cloud (VPC) to create my VPC and add additional components to produce a customized network for a Fortune 100 customer. I also create security groups for my EC2 instance. Then, I configure and customize an EC2 instance to run a web server and launch it into the VPC that looks like the following customer diagram:
 
 ![cust-diagram](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/architecture.jpeg "Customer Diagram")
 
 The customer is requesting the build of this architecture to launch their web server successfully.
 
 # AWS Service Restriction
-We wor on this project using sandbox to avoid unwanted bills so maybe some features are limited. But we try to make the steps as realistic as possible.
+I work on this project using sandbox to avoid unwanted bills so maybe some features are limited. But I try to make the steps as realistic as possible.
 
 # Configure AWS CLI
-To interact with AWS services using the CLI, we need to install CLI on the local machine (we use linux on this project) and create credentials in the AWS menu. Documentation about CLI you can find [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html).
-Since we are using a sandbox, the credentials are already available and using nano to paste credentials
+To interact with AWS services using the CLI, you need to install and configure CLI on the local machine (I use linux on this project) and create Access Key in the Security Credentials menu. Documentation about CLI you can find [here](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html).
+Since I'm using a sandbox, the credentials are already available and using nano to paste credentials
+
+![credentials](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/credentials.png "Credentials")
 
 ```
 nano ~/.aws/credentials
 ```
-
-![credentials](https://github.com/ridwansukri/VPC-with-CLI/blob/main/images/credentials.png "Credentials")
 
 # Create VPC
 Create a VPC with CIDR 10.0.0.0/16
@@ -137,7 +137,7 @@ Output:
 aws ec2 create-tags --resources subnet-0f5296308bbf7766b --tags Key=Name,Value=Private-Subnet-1
 ```
 
-# Create Public subnet 2
+## Create Public subnet 2
 Private Subnet 2 with CIDR 10.0.2.0/24 and AZ us-west-2b in the VPC that we created earlier
 ```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.2.0/24 --availability-zone us-west-2b
@@ -171,10 +171,17 @@ Output:
 ```
 
 ## Tagging Public Subnet 2
+```
 aws ec2 create-tags --resources subnet-0ba786e223af6bd76 --tags Key=Name,Value=Public-Subnet-2
+```
 
-#Private subnet 2 
+## Create Private subnet 2 
+Private Subnet 2 with CIDR 10.0.3.0/24 and AZ us-west-2b in the VPC that I created earlier
+```
 aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.3.0/24 --availability-zone us-west-2b
+```
+Output:
+```
 {
     "Subnet": {
         "AvailabilityZone": "us-west-2b",
@@ -199,14 +206,17 @@ aws ec2 create-subnet --vpc-id vpc-02aca48c23e8220e6 --cidr-block 10.0.3.0/24 --
         }
     }
 }
+```
+## Tagging Private Subnet 2
+```
 aws ec2 create-tags --resources subnet-03265e6c705bb8346 --tags Key=Name,Value=Private-Subnet-2
-
-
-
-
-
-#IGW
+```
+# Create Internet Gateway
+```
 aws ec2 create-internet-gateway
+```
+Output:
+```
 {
     "InternetGateway": {
         "Attachments": [],
@@ -215,10 +225,24 @@ aws ec2 create-internet-gateway
         "Tags": []
     }
 }
-
+```
+## Tagging Internet Gateway
+```
 aws ec2 create-tags --resources igw-0276549060483ce14 --tags Key=Name,Value=IGW-CLI
+```
+
+# Attach Internet Gateway to VPC
+```
 aws ec2 attach-internet-gateway --internet-gateway-id igw-0276549060483ce14 --vpc-id vpc-02aca48c23e8220e6
+```
+
+# Create Static IP Address via Elastic IP Address
+To Attach NAT Gateway from Public Subnet 1 into Private Subnet 1, I need an IP address that allocated from Elastic IP Address.
+```
 aws ec2 allocate-address --domain vpc
+```
+Output:
+```
 {
     "PublicIp": "34.208.19.63",
     "AllocationId": "eipalloc-0d546b7e68012adcc",
@@ -226,9 +250,16 @@ aws ec2 allocate-address --domain vpc
     "NetworkBorderGroup": "us-west-2",
     "Domain": "vpc"
 }
+```
 
-Create a Nat-gateway and place it in the public Subnet 1:
+# Create NAT-Gateway in Public Subnet 1
+Create a NAT gateway and put it in the Public Subnet 1, then map the static IP address from Elastic IP Address
+```
 aws ec2 create-nat-gateway --subnet-id subnet-02f18c2ce33868f88 --allocation-id eipalloc-0d546b7e68012adcc
+```
+
+Output:
+```
 {
     "ClientToken": "b2c9a31b-1749-4657-a3a9-d8c82b4b964e",
     "NatGateway": {
@@ -245,13 +276,16 @@ aws ec2 create-nat-gateway --subnet-id subnet-02f18c2ce33868f88 --allocation-id 
         "ConnectivityType": "public"
     }
 }
-
-
+```
+## Tagging NAT Gateway
 aws ec2 create-tags --resources nat-01bf708211ec634ed --tags Key=Name,Value=NAT-Subnet-1
 
-# Create Public Route Table for public Subnet:
-
+# Create Route Table 1 for Public Subnet:
+```
 aws ec2 create-route-table --vpc-id vpc-02aca48c23e8220e6
+```
+Output:
+```
 {
     "RouteTable": {
         "Associations": [],
@@ -270,14 +304,19 @@ aws ec2 create-route-table --vpc-id vpc-02aca48c23e8220e6
         "OwnerId": "672199935452"
     }
 }
-# Tag
+```
+
+## Tagging Route Table 1 as Public Route Table
+```
 aws ec2 create-tags --resources rtb-070e379080e967159 --tags Key=Name,Value=Public-Route-Table
+```
 
-
-# Create Private Route Table  for private Subnet:
-
+# Create Route Table 2 for Private Subnet:
+```
 aws ec2 create-route-table --vpc-id vpc-02aca48c23e8220e6
-
+```
+Output:
+```
 {
     "RouteTable": {
         "Associations": [],
@@ -296,73 +335,100 @@ aws ec2 create-route-table --vpc-id vpc-02aca48c23e8220e6
         "OwnerId": "672199935452"
     }
 }
+```
 
-#Tag:
-
+## Tagging Route Table 2 as Private Route Table
+```
 aws ec2 create-tags --resources rtb-0b8a0dd6b5000023d --tags Key=Name,Value=Private-Route-Table
+```
 
-
-
-Create a route to the internet in Public Route Table:
-
+# Create a Route to The Internet in Public Route Table:
+```
 aws ec2 create-route --route-table-id rtb-070e379080e967159 --destination-cidr-block 0.0.0.0/0 --gateway-id igw-0276549060483ce14
+```
+Output:
+```
 {
     "Return": true
 }
+```
 
-
-Create a route to the internet in Private Route Table for Private Subnet 1 via Nat:
-
+# Create a route to the internet in Private Route Table for Private Subnet 1 via NAT Gateway:
+```
 aws ec2 create-route --route-table-id rtb-0b8a0dd6b5000023d --destination-cidr-block 0.0.0.0/0 --gateway-id nat-01bf708211ec634ed
+```
+Output:
+```
 {
     "Return": true
 }
+```
 
-
-Associate Public Route Table to Public Subnet 1 :
-
+# Associate Public Route Table to Public Subnet 1 :
+```
 aws ec2 associate-route-table --route-table-id rtb-070e379080e967159 --subnet-id subnet-02f18c2ce33868f88
+```
+Output:
+```
 {
     "AssociationId": "rtbassoc-024988c2a745d1507",
     "AssociationState": {
         "State": "associated"
     }
 }
+```
 
-Associate Public Route Table to Public Subnet 2 :
-
+# Associate Public Route Table to Public Subnet 2 :
+```
 aws ec2 associate-route-table --route-table-id rtb-070e379080e967159 --subnet-id subnet-0ba786e223af6bd76
+```
+Output:
+```
 {
     "AssociationId": "rtbassoc-0d8912fbf6bfa9de1",
     "AssociationState": {
         "State": "associated"
     }
 }
+```
 
-
-Associate Private Route Table to Private Subnet 1 :
+# Associate Private Route Table to Private Subnet 1 :
+```
 aws ec2 associate-route-table --route-table-id rtb-0b8a0dd6b5000023d --subnet-id subnet-0f5296308bbf7766b
+```
+Output:
+```
 {
     "AssociationId": "rtbassoc-0196d49e7f8055df3",
     "AssociationState": {
         "State": "associated"
     }
 }
+```
 
-
-# Security Group
+# Create EC2 and it's own components
+## Create Security Group
+After VPC and additional components is complete, I create Security Group for EC2
+```
 aws ec2 create-security-group --group-name Web-Security-Group --description "Enable HTTP Access" --vpc-id vpc-02aca48c23e8220e6
+```
+Output:
+```
 {
     "GroupId": "sg-064aa87c8f2e78763"
 }
+```
 
-
+## Add HTTP Inboud Rules in Security Group
+```
 aws ec2 authorize-security-group-ingress \
     --group-id sg-064aa87c8f2e78763 \
     --protocol tcp \
     --port 80 \
     --cidr 0.0.0.0/0
-    
+```
+Output:
+```
  {
     "Return": true,
     "SecurityGroupRules": [
@@ -378,13 +444,18 @@ aws ec2 authorize-security-group-ingress \
         }
     ]
 }
-    
+```
+
+## Add SSH Inboud Rules in Security Group Only for my IP
+```
  aws ec2 authorize-security-group-ingress \
     --group-id sg-064aa87c8f2e78763 \
     --protocol tcp \
     --port 22 \
     --cidr 34.101.117.57/32
-    
+```
+Output:
+```
 {
     "Return": true,
     "SecurityGroupRules": [
@@ -400,16 +471,21 @@ aws ec2 authorize-security-group-ingress \
         }
     ]
 }
+```
 
-Create Key Pair and copy the key part and write it to a file MyKeyPairCLI.pem :
-
+## Create Key Pair
+```
 aws ec2 create-key-pair --key-name key-pair
+```
+Output:
+```
 {
     "KeyFingerprint": "6f:b8:9d:8b:a5:1e:bd:68:74:c9:80:a3:bf:67:10:94:46:fe:cc:1c",
     "KeyMaterial": "-----BEGIN RSA PRIVATE KEY-----\nMIIEpAIBAAKCAQEAtcL/W76QRQ8TQdxT3qC5wdF6AdqOyyxUaOrjyjDlCX1FQ6Fz\n383nhJIwU52TTqj/qOM/qgepdcs1r1vnACcgdCCvpIRG8dMQQmzqTWJTAcqcT2gE\n5nLkvMdZK2gJp6w5nWfRkQmlC2oTjyMYu3x3K6tN8rCF/mWLiBsQwvWgOG1I/WKB\n9V6bNiJv5e4Ypi2p9O1MYgNNylZO7kdcfSiZfrPdphA003lGV3cAVqwDnVtSa2I9\nkuouE9rnO2OmQWjkuHbZOv8aTaD/RzMyQoKxo/fOZoNJEuhEv72YJPiaI6lg+PI2\nFr4Rcrv+lsSTQgKsITNB3iu2lTrlFtJeI3apDwIDAQABAoIBAQCocZjzLgxHY6wm\nCgjTtcHQY9Ac7a4Njfx/6sbFd0Ca5bQN9A8NpqVbD5unsc11RVsA6fDzIvyhxHvx\nEktmsdv6otwDq+6PZ1mXJZaRtoBUla78S9rWsj1W0avKdTUVZZ9TR4ZIUlbY2Cpe\nKVlfTv6lwrCPK5ZR50tDDEohUz5zawrzmXWrPqTLEuSEi7SxeSGIyxuXAemQa9My\n5uutijNLy/6Y9dYFbtMmJtpHxqOSsIlufinXy7DnwPZqc923rdFV4knXEv6vJYJ5\nE82KF+Dbajr4jqWdFPupvDVN709LHY04BGt4iZJTilm9lW2DnmWumbXlVvLG42sc\nmPphQzYxAoGBAOmvIXhz/yesrZMjQ1N/aqomgvKj82YOdkamNwErY3Xp5ykzCTRn\n8jYhrh3+S9N2fBK1wLG1Ikr7S6XrKqP/RTLsVsVox0KKZ/4DE5SEVLzwmTyS4/Wa\nAMgzCLQLyIkSoLGG2IubjpANnmoC4Z2RSjp5jE/V1lXHLDFDdB8VgAv5AoGBAMce\nhXM/xvbDxdW4Lu+IZkOn8BrE9K+zuc/hnOEV82qhPb3xF8pKGUwVsQImMjRv6OE0\nQayMxACJO3BBIsppPXLEW8wTWGWDdxxf7cziXjbHSyL/Wt1ilDPosRn9vsyiOcBJ\nXQ3Hc8KSUaSt7A9ABPIOtCyhNYzJBhulY+Psrc9HAoGAPTZJzzKbYLoj0YoIJcQX\nnbBu1r5JkK8zHjiF6gGCkS2PBsS+oYKk+LcD1Al7tU2xHHmNmz82V2vSGgkq50CD\n0N4FsLpMj8qPiQMnSt0LEV741NwpaHlJwSdVHUyE4BsICtimupMp2eQnXd+ZV9vq\nFL0oGvWJqnh8w/7GWSoZm4kCgYEAo+fY3CykoB45LJsHb79sxsZn2/FCpZshGiDS\nXWoPTDfcNg1OkwL53eqBIY7FhuqT3UWBxgK9mN9eISJM/CczINTH564I9s8H7kB8\n5El2Wksk63Mdndz2t+AUYJvCQnpLZaA+TAhhnsmJETDlfwwoxgQahh5RkUkskPdM\nyaLa1CMCgYBfUFn9gm+TH/qtVQPPBfpc+FGS1eaeYRVjbMXIdmrGmDeMHovabeI0\nf2yKqxbYZOoy6PkvinS6SMJA4tQoeBGrekdOxQ9BbrirWdbSgTzGrNTSD4f7roJD\ncpj2WvnI61+6WTHelsxfVtJDvysaMOFyk/RavrxMhRqzBsfczlc8hw==\n-----END RSA PRIVATE KEY-----",
     "KeyName": "keypair",
     "KeyPairId": "key-089162164d08c227c"
 }
+```
 
 # Create EC2
 ami-0b5eea76982371e91 Amazon Linux 2 AMI (HVM) - Kernel 5.10, SSD Volume Type (64-bit (x86)) 
@@ -514,3 +590,5 @@ aws ec2 start-instances --instance-ids i-06bb4e94b36958e1a
     ]
 }
 
+Resources:
+[Setup Nat Gateway](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/ec2/create-nat-gateway.html)

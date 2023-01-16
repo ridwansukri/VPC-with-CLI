@@ -1,3 +1,7 @@
+> Author: Muh Ridwan Sukri
+
+> Last Updated: January, 17th 2022
+
 # Objectives
 - Create a virtual private cloud (VPC)
 - Create subnets

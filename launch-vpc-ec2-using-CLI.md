@@ -1,6 +1,6 @@
 > Author: Muh Ridwan Sukri
 
-> Last Updated: January, 17th 2022
+> Last Updated: January, 17th 2023
 
 # Objectives
 - Create a virtual private cloud (VPC)
